@@ -55,11 +55,13 @@ func Render(c Component) error {
 		area:      Area{RelX: 1, RelY: 1, Width: 60, Height: 60},
 	}
 
-	c.Init(tui)
+	go func() {
+		c.Init(tui)
 
-	// Start the render chain in another goroutine, so that we don't
-	// block the manager.Wait() call
-	go tui.Render()
+		// Start the render chain in another goroutine, so that we don't
+		// block the manager.Wait() call
+		tui.Render()
+	}()
 
 	return manager.Wait()
 }

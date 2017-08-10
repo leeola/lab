@@ -1,6 +1,8 @@
 package term
 
 import (
+	"sync"
+
 	termbox "github.com/nsf/termbox-go"
 )
 
@@ -14,6 +16,7 @@ func New() (Term, error) {
 }
 
 type term struct {
+	flushLock sync.Mutex
 }
 
 func (t *term) Close() error {
@@ -26,6 +29,12 @@ func (t *term) Renderer() Renderer {
 }
 
 func (t *term) Flush() error {
+
+	// Termbox seems to have issues with flushing concurrently, so the locking
+	// prevents some broken renders and/or panics.
+	t.flushLock.Lock()
+	defer t.flushLock.Unlock()
+
 	return termbox.Flush()
 }
 
