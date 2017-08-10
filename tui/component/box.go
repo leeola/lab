@@ -16,16 +16,6 @@ func (c *Box) Render(r tui.Region) error {
 	// 	PaddingTop: box.PaddingTop,
 	// }
 
-	// r.RenderComponent(c.Child, r.SubRegion())
-	// if box.Child != nil {
-	// 	box.Child.Render(Area{
-	// 		X:      a.X + 1,
-	// 		Y:      a.Y + 1,
-	// 		Width:  a.Width - 2,
-	// 		Height: a.Height - 2,
-	// 	})
-	// }
-
 	// // TODO(leeola): replace static sizing once region has dimensions.
 	width := 46
 	height := 10
@@ -60,6 +50,10 @@ func (c *Box) Render(r tui.Region) error {
 	d.Up()
 	if err := d.RepeatCell('|', height-2); err != nil {
 		return err
+	}
+
+	if c.Child != nil {
+		r.SubRegion(c.Child, r.Area())
 	}
 
 	return nil

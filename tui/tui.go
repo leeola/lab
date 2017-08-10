@@ -1,9 +1,6 @@
 package tui
 
 import (
-	"sync"
-
-	"github.com/leeola/errors"
 	"github.com/leeola/lab/tui/term"
 )
 
@@ -13,11 +10,12 @@ type Tui interface {
 }
 
 type Region interface {
+	Area() Area
 	Cell(rel_x, rel_y int, ru rune) error
 	HStr(rel_x, rel_y int, s string) error
 	VStr(rel_x, rel_y int, s string) error
 	Direction() *Direction
-	Render(Component) error
+	SubRegion(c Component, a Area) error
 }
 
 type Component interface {
@@ -30,8 +28,8 @@ type Component interface {
 // }
 
 type Area struct {
-	X      int
-	Y      int
+	RelX   int
+	RelY   int
 	Width  int
 	Height int
 }
@@ -48,16 +46,13 @@ func Render(c Component) error {
 	}
 	defer term.Close()
 
-	// r := &region{
-	// 	area:     Area{X: 1, Y: 1, Width: 60, Height: 60},
-	// }
-
 	manager := newManager()
 
 	tui := &tui{
 		manager:   manager,
 		term:      term,
 		component: c,
+		area:      Area{RelX: 1, RelY: 1, Width: 60, Height: 60},
 	}
 
 	c.Init(tui)
@@ -69,94 +64,13 @@ func Render(c Component) error {
 	return manager.Wait()
 }
 
-type manager struct {
-	closed       bool
-	closedLock   sync.Mutex
-	runningGroup sync.WaitGroup
-
-	once sync.Once
-	root *tui
-	errC chan error
-}
-
-func newManager() *manager {
-	return &manager{
-		errC: make(chan error, 5),
-	}
-}
-
-func (m *manager) setRoot(root *tui) {
-	m.root = root
-}
-
-func (m *manager) StartRender() (allowed bool) {
-	m.closedLock.Lock()
-	defer m.closedLock.Unlock()
-	if m.closed {
-		return false
-	}
-
-	m.runningGroup.Add(1)
-
-	return true
-}
-
-func (m *manager) DoneRender() {
-	m.runningGroup.Done()
-}
-
-func (m *manager) Error(err error) {
-	m.errC <- err
-	m.once.Do(m.quit)
-}
-
-func (m *manager) quit() {
-	// set closed to true, preventing future runners.
-	//
-	// This is being done outside of a lock to ensure there's never
-	// a lock race between multiple render attempts and this trying to
-	// close the attempt.
-	//
-	// A lock is still used before accessing the waitGroup, which keeps this
-	// concurrently safe. See below.
-	m.closed = true
-
-	// Lock the closed variable to ensure any concurrent executions of
-	// StartRender() don't start after Wait() is done.
-	//
-	// Eg, without lock, we could Wait() and immediately return because an
-	// existing StartRender() call has not yet added it's Add(1) to the
-	// WaitGroup. Locking here ensures that.
-	// The closed assigning above ensures new StartRender() calls return false.
-	m.closedLock.Lock()
-	m.runningGroup.Wait()
-	m.closedLock.Unlock()
-
-	// TODO(leeola): add some type of unmount method to *tui, so that
-	// m.Quit() triggers a full unmount chain.
-	// m.root.Quit()
-
-	close(m.errC)
-}
-
-func (m *manager) Quit() {
-	m.once.Do(m.quit)
-}
-
-func (m *manager) Wait() error {
-	var errs []error
-	for err := range m.errC {
-		errs = append(errs, err)
-	}
-	return errors.Join(errs)
-}
-
 // TODO(leeola): add a hierarchy setup to tui, so that each tui instance
 // renders that single component.
 type tui struct {
 	manager   *manager
 	term      term.Term
 	component Component
+	area      Area
 	// children  []Component
 	// children  []tui
 }
@@ -169,7 +83,7 @@ func (t *tui) Render() {
 	defer t.manager.DoneRender()
 
 	renderer := t.term.Renderer()
-	region := &region{renderer: renderer}
+	region := newRegion(renderer, t.area)
 
 	if err := t.component.Render(region); err != nil {
 		// TODO(leeola): Pass the error to an error handling
@@ -191,7 +105,35 @@ func (r *tui) Quit() {
 }
 
 type region struct {
+	area     Area
 	renderer term.Renderer
+	children map[Component]struct{}
+}
+
+func newRegion(r term.Renderer, a Area) *region {
+	return &region{
+		area:     a,
+		renderer: r,
+		children: map[Component]struct{}{},
+	}
+}
+
+func (r *region) Area() Area {
+	return r.area
+}
+
+func (r *region) SubRegion(c Component, a Area) error {
+	// TODO(leeola): Call Init() if it's not yet been in the map.
+	// Which means we need to track pre-existing children in this map
+	// as well.
+
+	r.children[c] = struct{}{}
+
+	return c.Render(newRegion(r.renderer, a))
+}
+
+func (r *region) Children() map[Component]struct{} {
+	return r.children
 }
 
 func (r *region) Direction() *Direction {
@@ -223,9 +165,5 @@ func (r *region) VStr(x, y int, s string) error {
 		}
 		i++
 	}
-	return nil
-}
-
-func (r *region) Render(Component) error {
 	return nil
 }
