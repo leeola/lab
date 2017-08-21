@@ -40,7 +40,7 @@ type Pos struct {
 }
 
 func Render(c Component) error {
-	term, err := term.New()
+	term, err := termbox.New()
 	if err != nil {
 		return err
 	}
