@@ -1,8 +1,9 @@
-package term
+package termbox
 
 import (
 	"sync"
 
+	"github.com/leeola/lab/tui/term"
 	termbox "github.com/nsf/termbox-go"
 )
 
@@ -40,10 +41,10 @@ func (t *Term) Flush() error {
 	return termbox.Flush()
 }
 
-func (t *Term) Renderer(z uint8) Renderer {
+func (t *Term) Renderer(z uint8) term.Renderer {
 	l, ok := t.layers[z]
 	if !ok {
-		l = NewLayer(t.w, z, t.stacks)
+		l = NewLayer(t, t.w, z, t.stacks)
 	}
 
 	return l
@@ -98,13 +99,18 @@ func (cs *CellStack) Render(z uint8) error {
 		return nil
 	}
 
-	termbox.SetCell(cs.x, cs.y, c.Ru, termbox.ColorDefault, termbox.ColorDefault)
+	termbox.SetCell(int(cs.x), int(cs.y), c.Ru, termbox.ColorDefault, termbox.ColorDefault)
 
 	return nil
 }
 
 func (cs *CellStack) SetCell(z uint8, ru rune) error {
-	cs.stack[z] = c
+	c := cs.stack[z]
+	if c == nil {
+		cs.stack[z] = &Cell{Ru: ru}
+	} else {
+		c.Ru = ru
+	}
 
 	if cs.top < z {
 		cs.top = z
@@ -135,7 +141,7 @@ func (cs *CellStack) SetCell(z uint8, ru rune) error {
 // at least. Though, i suppose if we want true concurrency/protection,
 // locking is required.
 func (cs *CellStack) DelCell(z uint8) error {
-	lenLayers := len(cs.layers)
+	lenLayers := uint8(len(cs.layers))
 
 	// if lenLayers is zero, there is no cell to delete.
 	if lenLayers == 0 {
@@ -170,20 +176,22 @@ func (cs *CellStack) DelCell(z uint8) error {
 }
 
 type Layer struct {
-	w uint
-	z uint8
+	flusher *Term
+	w       uint
+	z       uint8
 	// TODO(leeola): compare different methods of keeping track of which
 	// cells to were rendered.
 	// Eg, hashmap vs unique slice vs non-unique slice, etc.
-	rendered map[int]bool
+	rendered map[uint]bool
 	stacks   []*CellStack
 }
 
-func NewLayer(w uint, z uint8, stacks []*CellStack) *Layer {
+func NewLayer(flusher *Term, w uint, z uint8, stacks []*CellStack) *Layer {
 	return &Layer{
+		flusher:  flusher,
 		w:        w,
 		z:        z,
-		rendered: map[int]bool{},
+		rendered: map[uint]bool{},
 		stacks:   stacks,
 	}
 }
@@ -206,7 +214,7 @@ func (l *Layer) Flush() error {
 		}
 	}
 
-	return l.term.Flush()
+	return l.flusher.Flush()
 }
 
 func (l *Layer) Cell(x, y uint, ru rune) error {

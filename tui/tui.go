@@ -2,6 +2,7 @@ package tui
 
 import (
 	"github.com/leeola/lab/tui/term"
+	"github.com/leeola/lab/tui/term/termbox"
 )
 
 type Tui interface {
@@ -16,11 +17,12 @@ type Region interface {
 	VStr(rel_x, rel_y int, s string) error
 	Direction() *Direction
 	SubRegion(c Component, a Area) error
+	Fill(rune) error
 }
 
 type Component interface {
 	Init(Tui)
-	Render(Region) error
+	Render(r Region) error
 }
 
 // type Layout interface {
@@ -28,6 +30,7 @@ type Component interface {
 // }
 
 type Area struct {
+	Z      int
 	RelX   int
 	RelY   int
 	Width  int
@@ -40,7 +43,7 @@ type Pos struct {
 }
 
 func Render(c Component) error {
-	term, err := termbox.New()
+	term, err := termbox.New(60, 30)
 	if err != nil {
 		return err
 	}
@@ -84,8 +87,7 @@ func (t *tui) Render() {
 	}
 	defer t.manager.DoneRender()
 
-	renderer := t.term.Renderer()
-	region := newRegion(renderer, t.area)
+	region := newRegion(t.term, t.area)
 
 	if err := t.component.Render(region); err != nil {
 		// TODO(leeola): Pass the error to an error handling
@@ -96,7 +98,7 @@ func (t *tui) Render() {
 	}
 
 	// Flush the rendering after each Render() request.
-	if err := renderer.Flush(); err != nil {
+	if err := region.Flush(); err != nil {
 		t.manager.Error(err)
 		return
 	}
@@ -108,14 +110,16 @@ func (r *tui) Quit() {
 
 type region struct {
 	area     Area
+	term     term.Term
 	renderer term.Renderer
 	children map[Component]struct{}
 }
 
-func newRegion(r term.Renderer, a Area) *region {
+func newRegion(t term.Term, a Area) *region {
 	return &region{
 		area:     a,
-		renderer: r,
+		term:     t,
+		renderer: t.Renderer(uint8(a.Z)),
 		children: map[Component]struct{}{},
 	}
 }
@@ -131,7 +135,7 @@ func (r *region) SubRegion(c Component, a Area) error {
 
 	r.children[c] = struct{}{}
 
-	return c.Render(newRegion(r.renderer, a))
+	return c.Render(newRegion(r.term, a))
 }
 
 func (r *region) Children() map[Component]struct{} {
@@ -143,9 +147,13 @@ func (r *region) Direction() *Direction {
 }
 
 func (r *region) Cell(x, y int, ru rune) error {
-	r.renderer.Cell(x, y, ru)
+	r.renderer.Cell(uint(x), uint(y), ru)
 
 	return nil
+}
+
+func (r *region) Flush() error {
+	return r.renderer.Flush()
 }
 
 func (r *region) HStr(x, y int, s string) error {
@@ -167,5 +175,20 @@ func (r *region) VStr(x, y int, s string) error {
 		}
 		i++
 	}
+	return nil
+}
+
+func (r *region) Fill(ru rune) error {
+	// TODO(leeola): make the fill relative
+	// for x := 0; x < r.area.Width; x++ {
+	// 	for y := 0; y < r.area.Height; y++ {
+	for x := 0; x < 30; x++ {
+		for y := 0; y < 10; y++ {
+			if err := r.renderer.Cell(uint(x), uint(y), ru); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
