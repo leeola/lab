@@ -8,14 +8,18 @@ type Node struct {
 
 type Keyword struct {
 	Pos
+	String string
 }
 
-type NameAt struct {
-	*Name
+type Type struct {
+	Pos
+	String string
+	Name   *Name
 }
 
 // any input-able name. variable names, etc.
 type Name struct {
+	Pos
 }
 
 // :=, =, { }, []
