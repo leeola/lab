@@ -3,7 +3,22 @@ package main
 import . "github.com/leeola/lab/editor"
 
 func main() {
-	Type{
-		Pos
-	}
+  c := Closure{
+	Nodes: []Node{
+  	Group{
+		Nodes: []Node{
+			KeywordNode({
+				String: "package",
+			}),
+			NameNode({
+			}),
+			NameNode({
+  			       Start: `"`,
+			}),
+		},
+	},
+	},
+  }
+
+fmt.Println(c)
 }
