@@ -1,34 +1,42 @@
 package editor
 
-// type NodeType int
-//
-// const (
-// 	NodeTypeUnknown = iota
-// 	NodeTypeGroup
-// 	NodeTypeKeyword
-// )
-//
-// type Node struct {
-// 	Type    NodeType
-// 	Keyword *Keyword
-// 	Text    *Text
-// 	Group   *Group
-// }
-//
-// type Closure struct {
-// 	Nodes []Node
-// }
-//
-// type Group struct {
-// 	Desc   string
-// 	String string
-// }
-//
-// type Keyword struct {
-// 	Pos
-// 	String string
-// }
-//
+type NodeType int
+
+const (
+	NodeTypeUnknown = iota
+	NodeTypeClosure
+	NodeTypeGroup
+	NodeTypeKeyword
+)
+
+type Node struct {
+	Type    NodeType
+	Closure *Closure
+	Keyword *Keyword
+	// Text    *Text
+	// Group   *Group
+}
+
+type Options []*Option
+
+type Closure struct {
+	Nodes   []Node
+	Options []*Option
+}
+
+type Option struct {
+	Desc string
+	Node Node
+}
+
+type Group struct {
+	String string
+}
+
+type Keyword struct {
+	String string
+}
+
 // type Option struct {
 // }
 //

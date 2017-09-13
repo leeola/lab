@@ -9,9 +9,10 @@ import (
 type Editor struct {
 	screen tcell.Screen
 	quitC  chan struct{}
+	cursor *Cursor
 }
 
-func New() (*Editor, error) {
+func New(n Node) (*Editor, error) {
 	s, err := tcell.NewScreen()
 	if err != nil {
 		return nil, err
@@ -29,6 +30,10 @@ func New() (*Editor, error) {
 	return &Editor{
 		screen: s,
 		quitC:  make(chan struct{}),
+		cursor: &Cursor{
+			screen: s,
+			node:   n,
+		},
 	}, nil
 }
 
@@ -41,6 +46,8 @@ func (e *Editor) eventLoop() {
 			case tcell.KeyEscape, tcell.KeyEnter:
 				close(e.quitC)
 				return
+			case tcell.KeyRune:
+				e.HandleInput(ev.Rune())
 			case tcell.KeyCtrlL:
 				e.screen.Sync()
 			}
@@ -57,6 +64,8 @@ func (e *Editor) renderLoop() {
 			return
 		case <-time.After(time.Second):
 		}
+
+		e.screen.Show()
 	}
 }
 
@@ -65,4 +74,11 @@ func (e *Editor) Start() error {
 	e.renderLoop()
 	e.screen.Fini()
 	return nil
+}
+
+func (e *Editor) HandleInput(key rune) {
+	switch key {
+	case 'n':
+		e.cursor.InsertOption(0)
+	}
 }
