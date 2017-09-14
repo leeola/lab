@@ -18,7 +18,7 @@ func (c Cursor) Options() Options {
 
 func (c Cursor) InsertOption(n int) error {
 	drawWord(c.screen, 0, 0,
-		[]rune(c.node.Closure.Options[n].Node.Keyword.String))
+		c.node.Closure.Options[n].Node.Keyword.Chars)
 
 	return nil
 }

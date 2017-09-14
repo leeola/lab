@@ -30,16 +30,19 @@ type Option struct {
 }
 
 type Group struct {
-	String string
+	Nodes     []Node
+	EndOfLine bool
 }
 
 type Keyword struct {
-	String string
+	*Draw
 }
 
-// type Option struct {
-// }
-//
+type Draw struct {
+	Chars []rune
+	Width uint8
+}
+
 // // any input-able name. variable names, etc.
 // type Text struct {
 // 	Pos
@@ -51,12 +54,7 @@ type Keyword struct {
 // }
 //
 // type File struct{}
-//
-// type Pos struct {
-// 	Line uint
-// 	X    uint
-// }
-//
+
 // type Comment struct {
 // }
 //

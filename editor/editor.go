@@ -62,7 +62,7 @@ func (e *Editor) renderLoop() {
 		select {
 		case <-e.quitC:
 			return
-		case <-time.After(time.Second):
+		case <-time.After(time.Millisecond * 50):
 		}
 
 		e.screen.Show()

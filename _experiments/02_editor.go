@@ -12,7 +12,7 @@ func main() {
 					Node: Node{
 						Type: NodeTypeKeyword,
 						Keyword: &Keyword{
-							String: "package",
+							Draw: &Draw{Chars: []rune("package")},
 						},
 					},
 				},
