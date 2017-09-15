@@ -7,14 +7,15 @@ const (
 	NodeTypeClosure
 	NodeTypeGroup
 	NodeTypeKeyword
+	NodeTypeText
 )
 
 type Node struct {
 	Type    NodeType
 	Closure *Closure
 	Keyword *Keyword
-	// Text    *Text
-	Group *Group
+	Text    *Text
+	Group   *Group
 }
 
 type Options []*Option
@@ -35,7 +36,7 @@ type Group struct {
 }
 
 type Keyword struct {
-	*Draw
+	Draw
 }
 
 type Draw struct {
@@ -43,11 +44,11 @@ type Draw struct {
 	Width uint8
 }
 
-// // any input-able name. variable names, etc.
-// type Text struct {
-// 	Pos
-// }
-//
+// any input-able name. variable names, etc.
+type Text struct {
+	Draw
+}
+
 // // :=, =, { }, []
 // // too many possible syntaxes, need to refine them somehow.
 // type Syntax struct {
@@ -72,7 +73,7 @@ func KeywordNode(kw string) Node {
 	return Node{
 		Type: NodeTypeKeyword,
 		Keyword: &Keyword{
-			Draw: &Draw{
+			Draw: Draw{
 				Chars: r,
 				Width: uint8(len(r)),
 			},
@@ -80,9 +81,9 @@ func KeywordNode(kw string) Node {
 	}
 }
 
-// func TextNode(v Text) Node {
-// 	return Node{
-// 		Type:    NodeTypeText,
-// 		Keyword: &v,
-// 	}
-// }
+func TextNode() Node {
+	return Node{
+		Type: NodeTypeText,
+		Text: &Text{},
+	}
+}

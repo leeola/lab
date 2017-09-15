@@ -11,6 +11,7 @@ func main() {
 					Desc: "package",
 					Node: GroupNode(
 						KeywordNode("package"),
+						TextNode(),
 					),
 				},
 			},

@@ -41,6 +41,16 @@ func drawNode(s tcell.Screen, x, y int, n Node) (after_x int) {
 
 		return x
 
+	case NodeTypeText:
+		drawWord(s, x, y, n.Text.Chars)
+		x = x + int(n.Text.Width)
+
+		// a hack to manually add a space, since hidden syntax is not yet
+		// decided.
+		x++
+
+		return x
+
 	default:
 		return x
 	}
