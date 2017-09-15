@@ -9,12 +9,9 @@ func main() {
 			Options: Options{
 				{
 					Desc: "package",
-					Node: Node{
-						Type: NodeTypeKeyword,
-						Keyword: &Keyword{
-							Draw: &Draw{Chars: []rune("package")},
-						},
-					},
+					Node: GroupNode(
+						KeywordNode("package"),
+					),
 				},
 			},
 		},

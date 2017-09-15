@@ -14,7 +14,7 @@ type Node struct {
 	Closure *Closure
 	Keyword *Keyword
 	// Text    *Text
-	// Group   *Group
+	Group *Group
 }
 
 type Options []*Option
@@ -57,21 +57,29 @@ type Draw struct {
 
 // type Comment struct {
 // }
-//
-// func GroupNode(v Group) Node {
-// 	return Node{
-// 		Type:  NodeTypeGroup,
-// 		Group: &v,
-// 	}
-// }
-//
-// func KeywordNode(v Keyword) Node {
-// 	return Node{
-// 		Type:    NodeTypeKeyword,
-// 		Keyword: &v,
-// 	}
-// }
-//
+
+func GroupNode(nodes ...Node) Node {
+	return Node{
+		Type: NodeTypeGroup,
+		Group: &Group{
+			Nodes: nodes,
+		},
+	}
+}
+
+func KeywordNode(kw string) Node {
+	r := []rune(kw)
+	return Node{
+		Type: NodeTypeKeyword,
+		Keyword: &Keyword{
+			Draw: &Draw{
+				Chars: r,
+				Width: uint8(len(r)),
+			},
+		},
+	}
+}
+
 // func TextNode(v Text) Node {
 // 	return Node{
 // 		Type:    NodeTypeText,
