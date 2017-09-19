@@ -4,12 +4,14 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell"
+	"github.com/leeola/lab/editor/mode"
 )
 
 type Editor struct {
 	screen tcell.Screen
 	quitC  chan struct{}
 	cursor *Cursor
+	mode   mode.Mode
 }
 
 func New(n Node) (*Editor, error) {
@@ -30,6 +32,7 @@ func New(n Node) (*Editor, error) {
 	return &Editor{
 		screen: s,
 		quitC:  make(chan struct{}),
+		mode:   mode.Input,
 		cursor: &Cursor{
 			screen: s,
 			node:   n,
@@ -70,15 +73,8 @@ func (e *Editor) renderLoop() {
 }
 
 func (e *Editor) Start() error {
-	go e.eventLoop()
+	// go e.eventLoop()
 	e.renderLoop()
 	e.screen.Fini()
 	return nil
-}
-
-func (e *Editor) HandleInput(key rune) {
-	switch key {
-	case 'n':
-		e.cursor.InsertOption(0)
-	}
 }
