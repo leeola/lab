@@ -73,7 +73,7 @@ func (e *Editor) renderLoop() {
 }
 
 func (e *Editor) Start() error {
-	// go e.eventLoop()
+	go e.eventLoop()
 	e.renderLoop()
 	e.screen.Fini()
 	return nil

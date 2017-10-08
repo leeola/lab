@@ -1,29 +1,15 @@
 package editor
 
-import (
-	"github.com/gdamore/tcell"
-	"github.com/leeola/lab/editor/event"
-)
+import "github.com/leeola/lab/editor/mode"
 
-func (e *Editor) PollEvent(e *event.Event) {
-	for {
-		ev := e.screen.PollEvent()
-		switch ev := ev.(type) {
-		case *tcell.EventKey:
-			switch ev.Key() {
-			case tcell.KeyEscape, tcell.KeyEnter:
-				close(e.quitC)
-				return
-			case tcell.KeyRune:
-				e.HandleInput(ev.Rune())
-			case tcell.KeyCtrlL:
-				e.screen.Sync()
-			}
-		case *tcell.EventResize:
-			e.screen.Sync()
-		}
+// HandleInput provides programmatic input access to the editor.
+//
+// TODO(leeola): include modifiers in this arg.
+// Likely it should be a editor/key.Key type.
+func (e *Editor) HandleInput(key rune) {
+	switch e.mode {
+	case mode.NodeNavigation:
+	case mode.Input:
+		e.cursor.InsertOption(0)
 	}
-}
-
-func (e *Editor) HandleMode(key rune) {
 }
