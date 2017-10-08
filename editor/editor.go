@@ -12,6 +12,8 @@ type Editor struct {
 	quitC  chan struct{}
 	cursor *Cursor
 	mode   mode.Mode
+
+	width, height int
 }
 
 func New(n Node) (*Editor, error) {
@@ -29,15 +31,22 @@ func New(n Node) (*Editor, error) {
 		Background(tcell.ColorWhite))
 	s.Clear()
 
-	return &Editor{
+	w, h := s.Size()
+
+	e := &Editor{
 		screen: s,
+		width:  w,
+		height: h,
 		quitC:  make(chan struct{}),
-		mode:   mode.Input,
 		cursor: &Cursor{
 			screen: s,
 			node:   n,
 		},
-	}, nil
+	}
+
+	e.SetMode(mode.Input)
+
+	return e, nil
 }
 
 func (e *Editor) eventLoop() {

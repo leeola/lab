@@ -13,3 +13,19 @@ func (e *Editor) HandleInput(key rune) {
 		e.cursor.InsertOption(0)
 	}
 }
+
+func (e *Editor) SetMode(m mode.Mode) {
+	e.mode = m
+
+	var mName []rune
+	switch m {
+	case mode.NodeNavigation:
+		mName = []rune("navigation")
+	case mode.Input:
+		mName = []rune("input")
+	default:
+		mName = []rune(m.String())
+	}
+
+	drawWord(e.screen, e.width-len(mName), e.height-1, mName)
+}
