@@ -44,7 +44,7 @@ func New(n Node) (*Editor, error) {
 		},
 	}
 
-	e.SetMode(mode.Input)
+	e.SetMode(mode.NodeNavigation)
 
 	return e, nil
 }
@@ -55,7 +55,7 @@ func (e *Editor) eventLoop() {
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
 			switch ev.Key() {
-			case tcell.KeyEscape, tcell.KeyEnter:
+			case tcell.KeyEnter:
 				close(e.quitC)
 				return
 			case tcell.KeyRune:

@@ -9,8 +9,19 @@ import "github.com/leeola/lab/editor/mode"
 func (e *Editor) HandleInput(key rune) {
 	switch e.mode {
 	case mode.NodeNavigation:
+		e.handleNavInput(key)
+
 	case mode.Input:
 		e.cursor.InsertOption(0)
+	}
+}
+
+func (e *Editor) handleNavInput(key rune) {
+	switch key {
+	case 'i':
+		e.SetMode(mode.Input)
+	case 'w':
+	case 'b':
 	}
 }
 
